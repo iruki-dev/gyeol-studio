@@ -1,0 +1,46 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gyeol-studio"
+version = "0.1.0"
+description = "gyeol 스튜디오 — gyeol 라이브러리로 만든 보컬 코칭 앱 (로컬 서버 + 웹 화면)"
+readme = "README.md"
+license = { text = "MIT" }
+authors = [{ name = "iruki-dev" }]
+requires-python = ">=3.10"
+dependencies = [
+    "gyeol[train] @ git+https://github.com/iruki-dev/gyeol",
+    "fastapi>=0.110",
+    "uvicorn>=0.29",
+    "python-multipart>=0.0.9",
+    "cryptography>=42",
+    "qrcode>=7.4",
+    "pyyaml>=6",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7", "httpx>=0.27", "ruff>=0.4"]
+build = ["pyinstaller>=6.6"]
+
+[project.scripts]
+gyeol-studio = "gyeol_studio.launcher:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+gyeol_studio = ["resources/*.json", "web/**/*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 140
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "B", "I"]
+ignore = ["E501", "B008", "B905", "I001"]
