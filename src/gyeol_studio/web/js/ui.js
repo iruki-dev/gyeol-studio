@@ -86,7 +86,8 @@ export function confirmDialog(title, body, { ok = "확인", danger = false, inpu
     const m = modal([h("h2", {}, title), h("p", {}, body), field ? h("label", { class: "field" }, h("span", {}, input.label), field) : null,
       h("div", { class: "modal-actions" }, cancel, okBtn)], { onClose: () => resolve(null) });
     cancel.onclick = () => { m.close(); };
-    okBtn.onclick = () => { const v = field ? field.value : true; m.close(); resolve(v); };
+    // resolve before closing: closing resolves with null (the first resolve wins)
+    okBtn.onclick = () => { resolve(field ? field.value : true); m.close(); };
   });
 }
 

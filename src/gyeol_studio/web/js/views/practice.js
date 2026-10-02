@@ -97,10 +97,22 @@ export async function render(view, params) {
       h("label", { class: "row hint", style: { gap: "6px" } }, againBox, "끝나면 바로 한 번 더")),
     h("p", { class: "hint" }, `시작하면 ${adv.count_in_beats}번 딸깍 소리 뒤에 소절이 시작돼요. 이어폰을 끼고 반주에 맞춰 부르세요.`));
 
+  // ---------- does the phrase fit my range? (start check → gyeol.coach.health.check_phrase)
+  const rangeBox = h("div");
+  api.get(`/api/phrases/${phraseId}/range-check`).then((rc) => {
+    if (!rc.available) {
+      if (rc.reason === "no_range") clear(rangeBox, h("div", { class: "notice" }, h("span", { class: "ico" }, "🎚"),
+        h("div", {}, "시작 검사를 하면 이 소절이 내 음역에 맞는지, 키를 얼마나 옮기면 좋을지 알려 드려요. ", h("a", { href: "#/check" }, "시작 검사 하기"))));
+      return;
+    }
+    const ok = rc.status === "comfortable";
+    clear(rangeBox, h("div", { class: `notice ${ok ? "ok" : "warn"}` }, h("span", { class: "ico" }, ok ? "✓" : "🎚"), h("div", {}, rc.texts.map((t) => h("div", {}, t)))));
+  }).catch(() => {});
+
   // ---------- takes + coaching
   const takeList = h("div", { class: "take-list" });
   const panel = h("div", {}, h("div", { class: "card empty" }, h("p", {}, "녹음하면 여기에 피드백이 나와요.")));
-  clear(view, head, h("div", { class: "two-col" },
+  clear(view, head, rangeBox, h("div", { class: "two-col" },
     h("div", { class: "stack" }, recCard, h("div", { class: "card" }, h("h2", {}, "내 녹음"), takeList)),
     h("div", {}, panel)));
   drawLatency();
