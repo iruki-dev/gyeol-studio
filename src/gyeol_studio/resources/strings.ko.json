@@ -1,0 +1,54 @@
+{
+  "_comment": "화면에 나오는 코칭 문구. 코치가 직접 고칠 수 있습니다. gyeol reference_service의 coach.json(MIT)을 바탕으로 했습니다. '음치' 같은 낙인 표현은 쓰지 않습니다.",
+  "self_assessment": {
+    "question": "무엇이 달랐다고 느끼셨나요? 해당하는 것을 모두 골라 주세요.",
+    "matched": "스스로 느낀 부분이 맞아요. 듣는 귀가 좋아지고 있어요.",
+    "missed": "좋은 관찰이에요. 이번에는 아래 부분을 먼저 들어 볼까요?",
+    "nothing": "괜찮아요. 이번에 들어 볼 부분은 이거예요.",
+    "no_items": "이번 녹음에서는 확실히 짚을 만한 차이를 찾지 못했어요."
+  },
+  "feedback": {
+    "primary": "먼저 들어 볼 부분",
+    "secondary": "더 보기",
+    "none": "이번 녹음에서는 확실히 짚을 만한 차이를 찾지 못했어요. 잘 부르고 있어요!",
+    "tentative": "소리만으로는 확실하지 않아서 가능성으로 알려드려요.",
+    "experimental": "참고용 — 아직 검증 기준이 없는 항목이에요.",
+    "thresholds_synthetic": "지금은 합성 데이터로 정한 임시 기준으로 차이를 걸러요. 실제 녹음이 모이면 더 정확해져요."
+  },
+  "health": {
+    "referral": "목이 아프거나 쉰 목소리가 2주 넘게 이어지면 이비인후과 전문의의 진료를 받아 보세요. 이 앱은 의료 진단을 하지 않아요.",
+    "phonation_session": "이번 연습에서 소리를 낸 시간이 꽤 길어졌어요. 물을 마시고 잠깐 쉬어 가요.",
+    "phonation_daily": "오늘 노래한 시간이 많아요. 오늘은 여기서 쉬어 주는 게 목에 좋아요.",
+    "fatigue_instability": "음이 조금씩 흔들리기 시작했어요. 목이 피곤할 수 있으니 쉬었다가 해요.",
+    "fatigue_top_range": "높은 음이 처음보다 덜 올라가요. 잠깐 쉬어 가는 게 좋아요.",
+    "fatigue_breath": "숨소리가 처음보다 많아졌어요. 목을 쉬게 해 주세요.",
+    "above_tessitura": "이 소절은 편한 음역보다 높아요.",
+    "below_tessitura": "이 소절은 편한 음역보다 낮아요.",
+    "out_of_range": "이 소절에는 지금 음역 밖의 음이 있어요. 무리해서 내지 마세요.",
+    "transpose": "{direction} {semitones}반음 옮겨 부르는 것을 추천해요.",
+    "transpose_up": "키를 위로",
+    "transpose_down": "키를 아래로",
+    "octave": "편한 옥타브로 옮겨서 불러도 괜찮아요."
+  },
+  "onboarding": {
+    "production": {
+      "on_target": "음을 듣고 따라 부르는 것이 안정적이에요.",
+      "developing": "음을 듣고 따라 부르는 것은 연습하면서 좋아질 수 있어요."
+    },
+    "precision": {
+      "consistent": "같은 음을 여러 번 불러도 일정해요.",
+      "variable": "같은 음도 부를 때마다 조금씩 달라요. 천천히 맞춰 보는 연습이 도움이 돼요."
+    },
+    "perception": {
+      "fine": "두 음의 높낮이 차이를 잘 구분해요.",
+      "developing": "두 음을 비교해 듣는 연습을 함께 하면 도움이 돼요."
+    },
+    "routes": {
+      "own_voice_imitation": "내 목소리를 듣고 따라 하는 연습부터 시작해요.",
+      "wide_range_pitch_matching": "여러 높이의 음을 편하게 따라 불러 보는 연습을 해요.",
+      "perception_training": "귀로 음을 비교하는 연습도 함께 해요.",
+      "standard": "좋아하는 곡으로 바로 연습을 시작해도 좋아요."
+    },
+    "not_enough": "검사 횟수가 모자라서 이 부분은 판단하지 않았어요."
+  }
+}

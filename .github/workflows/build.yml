@@ -1,0 +1,65 @@
+name: build
+
+# Tests on every push; the double-click apps (Windows .exe folder, macOS .app) on tags and on demand.
+on:
+  push:
+    branches: ["**"]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - run: sudo apt-get update && sudo apt-get install -y libsndfile1
+      - run: pip install torch --index-url https://download.pytorch.org/whl/cpu
+      - run: pip install -e ".[dev]"
+      - run: ruff check src tests scripts
+      - run: pytest
+
+  app:
+    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
+    needs: test
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            artifact: gyeol-studio-windows
+          - os: macos-14          # Apple silicon
+            artifact: gyeol-studio-macos-arm64
+          - os: macos-13          # Intel
+            artifact: gyeol-studio-macos-x64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - name: torch (CPU)
+        shell: bash
+        run: |
+          if [ "$RUNNER_OS" = "Windows" ]; then pip install torch --index-url https://download.pytorch.org/whl/cpu; else pip install torch; fi
+      - run: pip install -e ".[build]" pillow
+      - run: python scripts/make_icons.py
+      - run: pyinstaller packaging/gyeol-studio.spec --noconfirm
+      - name: smoke test (the frozen app starts and answers)
+        shell: bash
+        run: |
+          if [ "$RUNNER_OS" = "Windows" ]; then EXE=dist/gyeol-studio/gyeol-studio.exe; else EXE="dist/결 스튜디오.app/Contents/MacOS/gyeol-studio"; fi
+          "$EXE" --console --no-browser --no-lan --data-dir "$RUNNER_TEMP/data" &
+          for i in $(seq 1 60); do curl -sf http://127.0.0.1:8765/api/status && break; sleep 2; done
+          curl -sf http://127.0.0.1:8765/api/status
+      - name: package
+        shell: bash
+        run: |
+          cp docs/설치-안내.md dist/ 2>/dev/null || true
+          cd dist
+          if [ "$RUNNER_OS" = "Windows" ]; then 7z a ../${{ matrix.artifact }}.zip gyeol-studio 설치-안내.md; else ditto -c -k --keepParent "결 스튜디오.app" ../${{ matrix.artifact }}.zip; fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: ${{ matrix.artifact }}.zip

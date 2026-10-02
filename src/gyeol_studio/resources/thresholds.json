@@ -1,0 +1,94 @@
+{
+  "provenance": {
+    "data": "synthetic knob recovery: 8 takes, clean vs pink-noise condition",
+    "synthetic": true,
+    "fitted_utc": "2026-10-02T06:40:11+00:00"
+  },
+  "audibility_floor": null,
+  "thresholds": {
+    "intonation_offset": {
+      "attribute": "intonation_offset",
+      "mdc": 0.7508155164319401,
+      "conf_levels": [
+        0.5240032480407585,
+        0.6798596128175493,
+        0.771803609832199,
+        0.871561313412812,
+        0.9255451369113468
+      ],
+      "error_bound": [
+        2.0280314781733186,
+        2.0280314781733186,
+        2.0280314781733186,
+        2.005195098319029,
+        2.005195098319029
+      ],
+      "min_confidence": 0.3984260118536626,
+      "unit": "cents",
+      "n_pairs": 48,
+      "n_error": 96
+    },
+    "onset_timing": {
+      "attribute": "onset_timing",
+      "mdc": 13.93516826652422,
+      "conf_levels": [
+        0.9659277668850454,
+        1.0
+      ],
+      "error_bound": [
+        20.6318943517894,
+        14.372635610732075
+      ],
+      "min_confidence": 0.9318555337700908,
+      "unit": "ms",
+      "n_pairs": 48,
+      "n_error": 96
+    },
+    "vibrato_extent": {
+      "attribute": "vibrato_extent",
+      "mdc": 28.707825769662144,
+      "conf_levels": [
+        0.515462421160145,
+        0.6702576334163427,
+        0.7697692051317709,
+        0.8598732291119815,
+        0.8918374310822771
+      ],
+      "error_bound": [
+        53.44527449057854,
+        10.02207312222145,
+        8.939303726309447,
+        8.939303726309447,
+        8.939303726309447
+      ],
+      "min_confidence": 0.3900128941767279,
+      "unit": "cents",
+      "n_pairs": 28,
+      "n_error": 58
+    },
+    "global_offset": {
+      "attribute": "global_offset",
+      "mdc": 0.437946442389512,
+      "conf_levels": [],
+      "error_bound": [],
+      "min_confidence": null,
+      "unit": "cents",
+      "n_pairs": 8,
+      "n_error": 16
+    },
+    "contour_deviation": {
+      "attribute": "contour_deviation",
+      "mdc": 21.909900382993214,
+      "conf_levels": [
+        0.8925146859362119
+      ],
+      "error_bound": [
+        45.122820987159876
+      ],
+      "min_confidence": 0.6150979776627697,
+      "unit": "cents",
+      "n_pairs": 10,
+      "n_error": 21
+    }
+  }
+}
