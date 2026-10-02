@@ -55,6 +55,7 @@ export async function render(view, params) {
       store.setConditions(c);
       routeSeg.querySelectorAll("button").forEach((b, i) => b.setAttribute("aria-pressed", String(ROUTES[i][0] === id)));
       drawLatency();
+      drawConditions();
       if (id === "speaker") toast("스피커로 반주를 틀면 마이크에 반주가 섞여요. 가능하면 이어폰을 써 주세요.");
     } }, label));
   }
@@ -75,11 +76,19 @@ export async function render(view, params) {
     return [h("label", { style: { fontWeight: 600 } }, label, h("div", { class: "hint", style: { fontWeight: 400 } }, help)), inp, out];
   };
   const againBox = h("input", { type: "checkbox", checked: again, onchange: () => { again = againBox.checked; store.set("again", again); } });
-  const condBtn = h("button", { class: "btn small ghost", onclick: conditionsDialog }, "녹음 조건");
+  const condBtn = h("button", { class: "btn small ghost", onclick: conditionsDialog, "data-tour": "conditions" }, "녹음 조건");
+  const condInfo = h("div", { class: "hint", style: { marginBottom: "10px" } });
+  function drawConditions() {
+    const c = store.conditions();
+    const parts = [c.device, c.place, c.backing === "off" ? "반주 없이" : "반주 틀고"].filter(Boolean);
+    clear(condInfo, `녹음 조건: ${parts.join(" · ")} `, !c.device || !c.place ? h("button", { class: "btn small ghost", onclick: conditionsDialog }, "기기·장소 적기") : null);
+  }
+  drawConditions();
   const recCard = h("div", { class: "card recorder" },
     h("div", { class: "row between", style: { marginBottom: "10px" } }, h("h2", { style: { margin: 0 } }, "따라 부르기"), condBtn),
     h("div", { class: "row", style: { justifyContent: "center", marginBottom: "6px" } }, h("span", { class: "hint" }, "듣는 장치"), routeSeg),
-    h("div", { style: { marginBottom: "12px" } }, latInfo),
+    h("div", { style: { marginBottom: "4px" } }, latInfo),
+    condInfo,
     h("div", { class: "sliders" }, slider("backing", "반주", "노래를 뺀 음악"), slider("guide", "가이드 보컬", "원곡 가수의 목소리")),
     countdown, lyricNow,
     h("div", { style: { margin: "8px 0 16px" } }, recBtn),
@@ -286,7 +295,7 @@ export async function render(view, params) {
       h("div", { class: "modal-actions" }, h("button", { class: "btn primary", onclick: () => {
         store.setConditions({ ...store.conditions(), device: device.value.trim(), place: place.value.trim(), backing: b });
         if (b === "off") vol.backing = 0;
-        m.close(); toast("녹음 조건을 저장했어요.");
+        m.close(); drawConditions(); toast("녹음 조건을 저장했어요.");
       } }, "저장"))]);
   }
 

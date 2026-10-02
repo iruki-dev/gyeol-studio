@@ -50,7 +50,9 @@ def delete_user(conn, layout, user_id: str) -> dict:
     tdir = layout.root / "takes" / user_id
     if tdir.exists():
         shutil.rmtree(tdir, ignore_errors=True)
-    counts = {"takes": len(takes), "files": files}
+    from .exporting import remove_exports_with_user
+
+    counts = {"takes": len(takes), "files": files, "export_folders": remove_exports_with_user(layout, user_id)}
     with db.tx(conn):
         for t in takes:
             conn.execute("DELETE FROM analyses WHERE owner_id=?", (t["id"],))

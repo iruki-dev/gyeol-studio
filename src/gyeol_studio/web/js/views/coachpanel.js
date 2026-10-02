@@ -24,10 +24,14 @@ export function coachPanel(container, takeId, { onLabel } = {}) {
     charts.splice(0).forEach((c) => c.destroy());
   }
 
+  function sigOf(d) {
+    return JSON.stringify([d.status, d.revealed, d.feedback_id, d.job && [d.job.status, Math.round((d.job.progress || 0) * 40)]]);
+  }
+
   async function load() {
     if (disposed) return;
     try { data = await api.get(`/api/takes/${takeId}/feedback`); } catch (e) { clear(container, h("div", { class: "notice err" }, e.message)); return; }
-    const sig = JSON.stringify([data.status, data.revealed, data.feedback_id, data.job && [data.job.status, Math.round((data.job.progress || 0) * 40)]]);
+    const sig = sigOf(data);
     if (sig === lastSig) {
       // only demos changed: refresh those boxes in place so playback elsewhere keeps going
       for (const [key, fn] of demoRefresh) {
@@ -68,14 +72,14 @@ export function coachPanel(container, takeId, { onLabel } = {}) {
       h("div", { class: "row", style: { marginTop: "14px" } }, submit),
       failed ? h("div", { class: "notice err" }, h("span", { class: "ico" }, "!"), h("div", {}, data.error || "분석하지 못했어요.",
         h("div", {}, h("button", { class: "btn small", style: { marginTop: "8px" }, onclick: async () => {
-          try { await api.post(`/api/takes/${takeId}/retry`); lastSig = ""; load(); } catch (e) { showError(e); } } }, "다시 분석")))) : null,
+          try { await api.post(`/api/takes/${takeId}/retry`); load(); } catch (e) { showError(e); } } }, "다시 분석")))) : null,
       job ? h("div", { style: { marginTop: "14px" } }, jobLine(job, { title: false })) : null));
   }
 
   async function reveal() {
     try {
       data = await api.post(`/api/takes/${takeId}/self-assessment`, { noticed: [...chosen] });
-      lastSig = "";
+      lastSig = sigOf(data);
       draw();
     } catch (e) { showError(e); }
   }
@@ -106,8 +110,9 @@ export function coachPanel(container, takeId, { onLabel } = {}) {
     if (item.experimental) notes.push(h("div", { class: "badge warn" }, data.strings.experimental));
     const tip = item.practice && item.practice[0];
     return h("div", {},
-      h("div", { class: "row" }, h("span", { class: "badge accent" }, item.category_label), notes),
-      h("div", { class: main ? "coach-text" : "", style: main ? {} : { fontWeight: 600, margin: "6px 0" } }, item.text),
+      // the main item shows its category and sentence here; an extra item already shows them in its summary line
+      main ? h("div", { class: "row" }, h("span", { class: "badge accent" }, item.category_label), notes) : (notes.length ? h("div", { class: "row" }, notes) : null),
+      main ? h("div", { class: "coach-text" }, item.text) : null,
       h("div", { class: "coach-sub" }, item.consistency_text),
       chartWrap, legend,
       demoBox,

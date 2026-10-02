@@ -117,10 +117,12 @@ details.adv[open] > summary::before { content: "▾ "; }
 /* ---------- surfaces ---------- */
 .card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; box-shadow: var(--shadow); }
 .card + .card { margin-top: 14px; }
+.grid > .card + .card, .row > .card + .card { margin-top: 0; }
 .card.flat { box-shadow: none; }
 .page-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
 .page-head p { margin: 0; color: var(--muted); }
 .grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+.grid.fit { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
 .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
 .row.between { justify-content: space-between; }
 .stack > * + * { margin-top: 12px; }
@@ -251,3 +253,7 @@ table.simple th { color: var(--muted); font-weight: 600; }
 .steps i { flex: 1; height: 5px; border-radius: 4px; background: var(--surface-2); }
 .steps i.on { background: var(--accent); }
 .big-number { font-size: 2rem; font-weight: 800; }
+@media (max-width: 760px) {
+  .big-number { font-size: 1.45rem; }
+  .grid > .card.flat { padding: 12px 14px; }
+}

@@ -24,6 +24,8 @@ for (const arg of process.argv.slice(2)) {
   if (scroll) await page.evaluate((sel) => document.querySelector(sel)?.scrollIntoView({ block: "start" }), scroll.slice(7));
   for (const f of flags.filter((x) => x.startsWith("click="))) { await page.click(f.slice(6)).catch((e) => console.log("click failed", e.message)); await page.waitForTimeout(1200); }
   await page.waitForTimeout(400);
+  // a sticky top bar is painted mid-image in full-page captures; make it static for the capture
+  if (flags.includes("full")) await page.addStyleTag({ content: ".topbar { position: static !important; }" });
   await page.screenshot({ path: path.join(SHOTS, `${name}.png`), fullPage: flags.includes("full") });
   console.log("shot", name);
   await ctx.close();
