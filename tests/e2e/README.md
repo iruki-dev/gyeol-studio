@@ -22,6 +22,14 @@ python tests/e2e/make_material.py <CSD>/korean <AUDIO>
 | `gom3_take_flat.wav` | 위 녹음을 35센트 낮춘 것(음 높이만 바꿈) |
 | `gom3_phrase.txt` | 곡에서 소절 구간(초) |
 
+4·5단계(기술 녹음·학습·안내 투어)는 여러 가수가 같은 가락을 여러 방식으로 부른 실제 녹음이 필요해서
+[VocalSet](https://zenodo.org/records/1442513)(CC BY 4.0)에서 필요한 파일만 받아 씁니다(전체 2.6GB 중 약 70MB, `pip install remotezip`).
+
+```bash
+python tests/e2e/make_technique_material.py <AUDIO>     # vs_*.wav + technique_plan.json
+python tests/e2e/make_check_material.py <AUDIO>         # 3단계 시작 검사용 합성 음
+```
+
 ## 실행
 
 ```bash
@@ -29,4 +37,6 @@ python -m gyeol_studio --console --no-browser --data-dir /tmp/gs-e2e     # 빈 �
 BASE=http://127.0.0.1:8765 AUDIO=<AUDIO> SHOTS=docs/screenshots/phase-1 node tests/e2e/phase1.mjs
 ```
 
+`phase4.mjs`는 테스터 6명의 기술 녹음 짝(첫 짝은 브라우저의 기술 녹음 모드로)과 학습 시작·멈춤·이어서·비교·적용·되돌리기를,
+`phase5.mjs`는 새 사용자의 안내 투어, 휴대폰(아이폰 브라우저 흉내) 접속, 오류 문구를 확인합니다.
 단계별 스크립트(`phase1.mjs` …)가 화면을 눌러 가며 진행하고, `shots.mjs`는 이미 있는 데이터로 화면만 캡처합니다.

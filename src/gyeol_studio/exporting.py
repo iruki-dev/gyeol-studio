@@ -93,10 +93,15 @@ def export_eval(conn, layout, scope: str, progress=lambda f, m: None) -> dict:
     return {**summary, "dir": str(d)}
 
 
-def export_train(conn, layout, scope: str, progress=lambda f, m: None) -> dict:
+def export_train(conn, layout, scope: str, progress=lambda f, m: None, out_dir: Path | None = None) -> dict:
+    """Training export; ``out_dir`` (a training run's own data folder) instead of a new folder under exports/."""
     takes = eligible_takes(conn, scope, labelled_only=True)
-    d = _out_dir(layout, TRAIN)
-    (d / "audio").mkdir()
+    if out_dir is None:
+        d = _out_dir(layout, TRAIN)
+    else:
+        d = Path(out_dir)
+        d.mkdir(parents=True, exist_ok=True)
+    (d / "audio").mkdir(exist_ok=True)
     entries, items, users = [], [], set()
     for i, t in enumerate(takes):
         progress(i / max(1, len(takes)), f"녹음 {i + 1}/{len(takes)} 정리하는 중")
@@ -116,8 +121,14 @@ def export_train(conn, layout, scope: str, progress=lambda f, m: None) -> dict:
     (d / "recordings.json").write_text(json.dumps(entries, ensure_ascii=False, indent=1), encoding="utf-8")
     (d / "manifest.json").write_text(json.dumps({"dataset": "own_recordings", "root": str(d), "items": items}, ensure_ascii=False, indent=1),
                                      encoding="utf-8")
+    counts: dict[str, int] = {}
+    for it in items:
+        for k in ("register", "phonation"):
+            if k in it["labels"]:
+                v = it["labels"][k] or "none"
+                counts[f"{k}:{v}"] = counts.get(f"{k}:{v}", 0) + 1
     summary = {"kind": TRAIN, "scope": scope, "created_at": db.now(), "takes": len(takes), "users": sorted(users),
-               "pairs": len({t["pair_id"] for t in takes if t["pair_id"]}), "files": ["recordings.json", "manifest.json"]}
+               "pairs": len({t["pair_id"] for t in takes if t["pair_id"]}), "label_counts": counts, "files": ["recordings.json", "manifest.json"]}
     _finish(d, summary, "학습용 데이터 (recordings.json + gyeol manifest)",
             f"gyeol prepare --manifest \"{d / 'manifest.json'}\" --out runs/cache\n")
     return {**summary, "dir": str(d)}

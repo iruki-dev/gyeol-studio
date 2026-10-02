@@ -10,6 +10,9 @@ import { playUrl, stopSingle } from "../audio/abplayer.js";
 import { drawMiniWave, peaksOf } from "../waveform.js";
 import { coachPanel } from "./coachpanel.js";
 
+const LABEL_KO = { chest: "흉성", mixed: "믹스", falsetto: "가성", breathy: "숨섞임", pressed_belt: "압착·벨팅", pharyngeal_twang: "트왱", fry: "프라이",
+  rough: "거침", none: "맑은 소리" };
+const labelText = (l) => [l.register, ...(l.qualities || [])].filter(Boolean).map((x) => LABEL_KO[x] || x).join("·");
 const ROUTES = [["wired", "유선 이어폰"], ["bluetooth", "블루투스"], ["speaker", "스피커"]];
 
 export async function render(view, params) {
@@ -84,8 +87,24 @@ export async function render(view, params) {
     clear(condInfo, `녹음 조건: ${parts.join(" · ")} `, !c.device || !c.place ? h("button", { class: "btn small ghost", onclick: conditionsDialog }, "기기·장소 적기") : null);
   }
   drawConditions();
+  // ---------- technique recording mode: the same phrase twice, without and with a technique, saved as a labelled pair
+  const tech = { on: false, contrast: null, role: "off", pair: null };
+  let techniques = [];
+  api.get("/api/techniques").then((r) => { techniques = r.techniques; drawTech(); }).catch(() => {});
+  const modeSeg = h("div", { class: "seg", role: "group", "aria-label": "녹음 방식", "data-tour": "technique" },
+    h("button", { "aria-pressed": "true", onclick: () => setMode(false) }, "연습"),
+    h("button", { "aria-pressed": "false", onclick: () => setMode(true) }, "기술 녹음"));
+  const techBox = h("div", { hidden: true, style: { textAlign: "left", margin: "4px 0 12px" } });
+  function setMode(on) {
+    tech.on = on;
+    modeSeg.querySelectorAll("button").forEach((b, i) => b.setAttribute("aria-pressed", String(i === (on ? 1 : 0))));
+    techBox.hidden = !on;
+    drawTech();
+  }
   const recCard = h("div", { class: "card recorder" },
     h("div", { class: "row between", style: { marginBottom: "10px" } }, h("h2", { style: { margin: 0 } }, "따라 부르기"), condBtn),
+    h("div", { class: "row", style: { justifyContent: "center", marginBottom: "8px" } }, modeSeg),
+    techBox,
     h("div", { class: "row", style: { justifyContent: "center", marginBottom: "6px" } }, h("span", { class: "hint" }, "듣는 장치"), routeSeg),
     h("div", { style: { marginBottom: "4px" } }, latInfo),
     condInfo,
@@ -96,6 +115,18 @@ export async function render(view, params) {
     h("div", { class: "row", style: { justifyContent: "center", marginTop: "12px" } }, previewBtn,
       h("label", { class: "row hint", style: { gap: "6px" } }, againBox, "끝나면 바로 한 번 더")),
     h("p", { class: "hint" }, `시작하면 ${adv.count_in_beats}번 딸깍 소리 뒤에 소절이 시작돼요. 이어폰을 끼고 반주에 맞춰 부르세요.`));
+
+  function drawTech() {
+    if (!tech.on) return;
+    const t = techniques.find((x) => x.id === tech.contrast);
+    clear(techBox,
+      h("p", { class: "hint", style: { margin: "0 0 8px" } }, "같은 소절을 두 번 불러요. 데이터에 짝으로 저장되고 라벨이 자동으로 붙어요. 모델이 소리의 차이를 배우는 데 써요."),
+      h("div", { class: "chips" }, techniques.map((x) => h("button", { class: "chip small", "aria-pressed": String(x.id === tech.contrast),
+        onclick: () => { tech.contrast = x.id; tech.role = "off"; tech.pair = null; drawTech(); } }, x.label))),
+      t ? h("ol", { style: { margin: "10px 0 0", paddingLeft: "1.3em" } }, t.steps.map((st) => h("li", {
+        style: { fontWeight: st.role === tech.role ? 700 : 400, color: st.role === tech.role ? "var(--ink)" : "var(--muted)" } },
+      `${st.label}: ${st.how}`, st.role === "off" && tech.role === "on" ? " ✓" : ""))) : h("p", { class: "hint" }, "어떤 차이를 녹음할지 골라 주세요."));
+  }
 
   // ---------- does the phrase fit my range? (start check → gyeol.coach.health.check_phrase)
   const rangeBox = h("div");
@@ -211,6 +242,7 @@ export async function render(view, params) {
 
   let rec = null;
   async function startTake() {
+    if (tech.on && !tech.contrast) { toast("기술 녹음에서 녹음할 차이를 먼저 골라 주세요.", { error: true }); return; }
     try {
       await ensureReady();
       const m = await openMic();
@@ -275,9 +307,20 @@ export async function render(view, params) {
     }
     const fd = new FormData();
     fd.append("file", encodeWav(samples, sampleRate), "take.wav");
-    fd.append("meta", JSON.stringify({ phrase_offset_s: offset, latency_ms: lat.ms, latency_method: lat.method, conditions: store.conditions() }));
+    const meta = { phrase_offset_s: offset, latency_ms: lat.ms, latency_method: lat.method, conditions: store.conditions() };
+    if (tech.on && tech.contrast) {
+      if (!tech.pair) tech.pair = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random())).replace(/-/g, "").slice(0, 16);
+      const t = techniques.find((x) => x.id === tech.contrast);
+      Object.assign(meta, { kind: "technique", pair_id: tech.pair, pair_role: tech.role, technique: { contrast: tech.contrast, label: t ? t.label : tech.contrast } });
+    }
+    fd.append("meta", JSON.stringify(meta));
     try {
       const t = await uploadWithProgress(`/api/phrases/${phraseId}/takes`, fd);
+      if (meta.kind === "technique") {
+        if (tech.role === "off") { tech.role = "on"; toast("첫 번째를 저장했어요. 이제 두 번째 방식으로 불러 주세요."); }
+        else { tech.role = "off"; tech.pair = null; toast("짝 녹음을 저장했어요. 라벨이 자동으로 붙었어요."); }
+        drawTech();
+      }
       const a = Math.max(0, Math.round(offset * sampleRate));
       localPeaks.set(t.id, peaksOf(samples.subarray(a, a + Math.round(dur * sampleRate)), 300));
       pollNow();
@@ -328,13 +371,14 @@ export async function render(view, params) {
       onclick: async (e) => { e.stopPropagation(); try { await playUrl(`/api/takes/${t.id}/audio`); } catch (err) { showError(err); } } });
     const job = t.job && ["queued", "running"].includes(t.job.status) ? t.job : null;
     let status;
+    const techBadge = t.kind === "technique" && t.labels ? h("span", { class: "badge accent" }, `기술: ${labelText(t.labels)}`) : null;
     if (t.status === "ready") status = t.feedback && t.feedback.revealed ? h("span", { class: "hint" }, t.feedback.primary || "짚을 차이 없음") : h("span", { class: "badge accent" }, "피드백 확인 전");
     else if (t.status === "failed") status = h("span", { class: "badge err" }, "분석 실패");
     else status = job ? jobLine(job, { title: false }) : h("span", { class: "badge" }, "분석 대기");
     const row = h("div", { class: "take" + (t.id === selected ? " selected" : ""), "data-id": t.id, tabindex: "0", role: "button",
       onclick: () => select(t.id), onkeydown: (e) => { if (e.key === "Enter") select(t.id); } },
-    h("span", { class: "num" }, n),
-    h("div", { style: { minWidth: 0 } }, canvas, h("div", { class: "row between" }, h("small", { class: "muted" }, fmtDate(t.created_at)), status)),
+    h("span", { class: "num", title: t.kind === "technique" ? "기술 녹음" : "" }, n),
+    h("div", { style: { minWidth: 0 } }, canvas, h("div", { class: "row between" }, h("small", { class: "muted" }, fmtDate(t.created_at), " ", techBadge), status)),
     h("div", { class: "row" }, playBtn, h("button", { class: "icon-btn", title: "지우기", "aria-label": "녹음 지우기", html: '<svg viewBox="0 0 24 24" width="20"><path d="M5 7h14M10 7V4.5h4V7M7 7l1 13h8l1-13" stroke="currentColor" stroke-width="1.8" fill="none"/></svg>',
       onclick: async (e) => {
         e.stopPropagation();

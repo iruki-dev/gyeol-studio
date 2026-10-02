@@ -9,7 +9,7 @@ from pathlib import Path
 from fastapi import APIRouter, Body, File, Form, Request, UploadFile
 from fastapi.responses import FileResponse
 
-from .. import audio, coaching, consent, db, jobs
+from .. import audio, coaching, consent, db, jobs, labels
 from ..deps import ApiError, conn, current_user, get_or_404, state
 from ..maintenance import delete_take
 
@@ -103,8 +103,19 @@ def upload_take(request: Request, pid: str, file: UploadFile = File(...), meta: 
                    snap["consent_at"], snap["retain_until"], "queued",
                    str(m["pair_id"])[:40] if m.get("pair_id") else None, str(m["pair_role"])[:20] if m.get("pair_role") else None,
                    db.dumps(m["technique"]) if m.get("technique") else None))
+        tech = m.get("technique") or {}
+        lab = labels.technique_labels(str(tech.get("contrast", "")), str(m.get("pair_role", ""))) if kind == "technique" else None
+        if lab is not None:  # the app asked for this technique: the label is known
+            c.execute("INSERT INTO labels(take_id, register, qualities, rhythm, memo, labeled_by, updated_at) VALUES(?,?,?,?,?,?,?)",
+                      (tid, lab["register"], db.dumps(lab["qualities"]) if lab["qualities"] is not None else None, None,
+                       f"기술 녹음: {tech.get('label', '')}", user["id"], db.now()))
     jobs.submit(c, "analyze_take", {"take_id": tid}, title="녹음 분석", owner_id=tid, user_id=user["id"])
     return _take_view(c, get_or_404(c, "takes", tid))
+
+
+@router.get("/techniques")
+def list_techniques():
+    return {"techniques": labels.techniques()}
 
 
 @router.get("/phrases/{pid}/takes")

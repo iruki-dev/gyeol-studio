@@ -68,3 +68,33 @@ def to_gyeol(lab: dict | None) -> dict:
     if lab.get("rhythm"):
         out["rhythm_ok"] = lab["rhythm"] == "ok"
     return out
+
+
+# Technique recording mode: the app asks for the same phrase twice — once without and once with a technique — and
+# stores the pair (``pair_id``, ``pair_role`` off/on, as gyeol's paired loader expects) with the labels already set.
+TECHNIQUES = {
+    "register": {"label": "흉성 ↔ 가성", "off": ("흉성", "말할 때처럼 가슴이 울리는 단단한 소리로", {"register": "chest"}),
+                 "on": ("가성", "가볍고 바람이 조금 섞인 머리 울림 소리로", {"register": "falsetto"})},
+    "mixed": {"label": "흉성 ↔ 믹스", "off": ("흉성", "말할 때처럼 가슴이 울리는 단단한 소리로", {"register": "chest"}),
+              "on": ("믹스", "흉성과 가성의 중간, 높은 음도 편하게 이어지는 소리로", {"register": "mixed"})},
+    "breathy": {"label": "맑은 소리 ↔ 숨섞인 소리", "off": ("맑은 소리", "숨이 새지 않게 또렷하게", {"qualities": ["none"]}),
+                "on": ("숨섞인 소리", "속삭이듯 숨을 많이 섞어서", {"qualities": ["breathy"]})},
+    "pressed_belt": {"label": "편한 소리 ↔ 압착·벨팅", "off": ("편한 소리", "힘을 빼고 편하게", {"qualities": ["none"]}),
+                     "on": ("압착·벨팅", "힘주어 세게 밀어내듯 (목이 아프면 바로 멈추세요)", {"qualities": ["pressed_belt"]})},
+    "pharyngeal_twang": {"label": "보통 ↔ 트왱", "off": ("보통 소리", "평소처럼", {"qualities": ["none"]}),
+                         "on": ("트왱", "코와 입천장 쪽으로 쨍하게 모아서", {"qualities": ["pharyngeal_twang"]})},
+    "fry": {"label": "보통 ↔ 프라이", "off": ("보통 소리", "평소처럼", {"qualities": ["none"]}),
+            "on": ("프라이", "지글지글 끓는 듯한 낮은 소리로 (무리하지 마세요)", {"qualities": ["fry"]})},
+}
+
+
+def techniques() -> list[dict]:
+    return [{"id": k, "label": v["label"], "steps": [{"role": r, "label": v[r][0], "how": v[r][1]} for r in ("off", "on")]}
+            for k, v in TECHNIQUES.items()]
+
+
+def technique_labels(contrast: str, role: str) -> dict | None:
+    t = TECHNIQUES.get(contrast)
+    if t is None or role not in ("off", "on"):
+        return None
+    return {"register": None, "qualities": None, "rhythm": None, "memo": "", **t[role][2]}

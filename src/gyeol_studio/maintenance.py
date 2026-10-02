@@ -52,7 +52,8 @@ def delete_user(conn, layout, user_id: str) -> dict:
         shutil.rmtree(tdir, ignore_errors=True)
     from .exporting import remove_exports_with_user
 
-    counts = {"takes": len(takes), "files": files, "export_folders": remove_exports_with_user(layout, user_id)}
+    counts = {"takes": len(takes), "files": files, "export_folders": remove_exports_with_user(layout, user_id),
+              "training_runs": _remove_from_training(conn, layout, user_id)}
     with db.tx(conn):
         for t in takes:
             conn.execute("DELETE FROM analyses WHERE owner_id=?", (t["id"],))
@@ -69,6 +70,24 @@ def delete_user(conn, layout, user_id: str) -> dict:
         conn.execute("DELETE FROM users WHERE id=?", (user_id,))
         conn.execute("INSERT INTO deletion_log(user_id, deleted_at, counts) VALUES(?,?,?)", (user_id, db.now(), db.dumps(counts)))
     return counts
+
+
+def _remove_from_training(conn, layout, user_id: str) -> int:
+    """Training runs that used this person's recordings lose their copied audio and prepared features.
+
+    The trained weights stay (a network cannot "unlearn" one person); the run is marked so the screen can say so.
+    """
+    import json
+
+    n = 0
+    for r in conn.execute("SELECT id, data_summary FROM training_runs WHERE data_summary IS NOT NULL").fetchall():
+        users = (json.loads(r["data_summary"]) or {}).get("users", [])
+        if user_id in users:
+            d = layout.training / "runs" / r["id"]
+            shutil.rmtree(d / "data", ignore_errors=True)
+            shutil.rmtree(d / "cache", ignore_errors=True)
+            n += 1
+    return n
 
 
 def sweep_retention(conn, layout, now: float | None = None) -> int:
