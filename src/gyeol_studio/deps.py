@@ -24,6 +24,7 @@ class State:
         self.https_info = https_info
         self.workers = None
         self._local = threading.local()
+        self.devices: dict[str, dict] = {}  # other devices on the Wi-Fi that opened the app: ip → {seen, agent}
 
     def conn(self):
         c = getattr(self._local, "conn", None)

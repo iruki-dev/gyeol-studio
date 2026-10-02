@@ -135,6 +135,8 @@ def create_app(settings: Settings, *, start_workers: bool = False, https_info: d
             if request.url.scheme == "http" and client not in ("127.0.0.1", "::1") and request.url.path not in ("/ca.crt",):
                 host = (request.url.hostname or "").strip("[]")
                 return RedirectResponse(f"https://{host}:{state.https_info['port']}{request.url.path}", status_code=307)
+            if client and client not in ("127.0.0.1", "::1") and request.url.path.startswith("/api/"):
+                state.devices[client] = {"seen": time.time(), "agent": request.headers.get("user-agent", "")[:200]}
             return await call_next(request)
 
     root = web_root()

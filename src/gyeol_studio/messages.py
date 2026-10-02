@@ -57,7 +57,7 @@ API = {
     "bad_response": "응답을 다시 골라 주세요.",
     "bad_settings": "설정 값이 올바르지 않아요. 다시 확인해 주세요.",
     "data_dir_unusable": "그 폴더에는 저장할 수 없어요. 다른 폴더를 골라 주세요.",
-    "job_not_cancellable": "이 작업은 지금 멈출 수 없어요.",
+    "job_not_cancellable": "이 작업은 지금 멈출 수 없어요. 끝날 때까지 기다려 주세요.",
     "no_training_data": "학습에 쓸 수 있는 녹음이 없어요. 학습 동의를 받은 녹음에 라벨을 붙여 주세요.",
     "training_running": "이미 학습이 진행 중이에요. 끝나거나 멈춘 뒤에 새로 시작해 주세요.",
     "local_only": "이 기능은 앱을 실행한 PC에서만 쓸 수 있어요.",

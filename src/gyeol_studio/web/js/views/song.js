@@ -27,7 +27,7 @@ export async function render(view, [songId]) {
       h("button", { class: "btn small danger", onclick: removeSong }, icon("trash"), "곡 지우기")));
 
   // ----- waveform & selection form
-  const waveBox = h("div", { class: "wave-wrap" });
+  const waveBox = h("div", { class: "wave-wrap", "data-tour": "phrase-wave" });
   const wf = new Waveform(waveBox, {
     peaks: peaks.peaks, duration: peaks.duration_s, height: 150,
     onSelect: (s) => { setSel(s.start, s.end); },

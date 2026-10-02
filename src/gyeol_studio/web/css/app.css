@@ -257,3 +257,12 @@ table.simple th { color: var(--muted); font-weight: 600; }
   .big-number { font-size: 1.45rem; }
   .grid > .card.flat { padding: 12px 14px; }
 }
+
+/* ---------- guided tour ---------- */
+.tour-ring { position: fixed; z-index: 40; border-radius: 12px; pointer-events: none; box-shadow: 0 0 0 3px var(--accent), 0 0 0 9999px rgba(20, 18, 16, .18); transition: all .2s ease; }
+.tour-bubble { position: fixed; z-index: 45; background: var(--surface); color: var(--ink); border-radius: 14px; padding: 14px 16px; box-shadow: 0 12px 40px rgba(0,0,0,.22); border: 1px solid var(--line); animation: up .2s ease; }
+.tour-bubble h3 { margin: 2px 0 6px; font-size: 1.05rem; }
+.tour-bubble p { margin: 0 0 12px; font-size: .95rem; }
+.tour-count { font-size: .8rem; font-weight: 700; color: var(--accent); }
+.tour-list { padding-left: 1.3em; }
+.tour-list li { margin-bottom: 6px; }

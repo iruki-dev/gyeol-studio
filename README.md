@@ -61,4 +61,4 @@ docs/              단계별 기록, 화면 캡처, 라이브러리 요청
 
 ## 라이선스
 
-MIT. 보컬 분리 모델(BS-RoFormer viperx ep317)은 앱에 들어 있지 않고 첫 실행 때 `gyeol fetch`로 받습니다. 원 출처에 라이선스가 적혀 있지 않습니다(gyeol의 자산 목록 참고). 테스트에 쓴 노래(CSD, vocadito)는 저장소에 넣지 않았습니다.
+MIT. 보컬 분리 모델(BS-RoFormer viperx ep317)은 앱에 들어 있지 않고 첫 실행 때 `gyeol fetch`로 받습니다. 원 출처에 라이선스가 적혀 있지 않습니다(gyeol의 자산 목록 참고). 테스트에 쓴 노래(CSD, VocalSet)는 저장소에 넣지 않았습니다.

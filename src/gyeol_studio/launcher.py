@@ -142,6 +142,38 @@ def _restart_process() -> None:
     subprocess.Popen(args, close_fds=True)  # noqa: S603 - restarts this same program
 
 
+def _fatal(message: str, *, console: bool) -> None:
+    """Startup failed: say what happened and what to do — in a dialog, since the packaged app has no console."""
+    print(message, file=sys.stderr)
+    log.error("startup failed: %s", message)
+    if console:
+        return
+    try:
+        import tkinter as tk
+        from tkinter import messagebox
+
+        root = tk.Tk()
+        root.withdraw()
+        messagebox.showerror("gyeol 스튜디오", message)
+        root.destroy()
+    except Exception:  # noqa: BLE001 - no display: the message went to stderr and the log
+        pass
+
+
+def _startup_message(exc: BaseException, data_dir: str) -> str:
+    from .messages import korean_reason
+
+    text = f"{type(exc).__name__}: {exc}"
+    if isinstance(exc, PermissionError) or "Permission denied" in text or "Errno 13" in text or "read-only" in text.lower():
+        return f"데이터 폴더({data_dir})에 저장할 수 없어서 시작하지 못했어요. 폴더 권한을 확인하거나, 설정 파일에서 다른 폴더를 지정해 주세요."
+    if "No space left" in text or "Errno 28" in text:
+        return "저장 공간이 부족해서 시작하지 못했어요. 디스크 공간을 비운 뒤 다시 실행해 주세요."
+    known = korean_reason(text)
+    if known == korean_reason(""):  # nothing specific: point to the log the team can read
+        known = "PC를 다시 시작한 뒤에도 같으면, 아래 내용과 데이터 폴더의 logs/app.log 파일을 개발팀에 보내 주세요."
+    return f"gyeol 스튜디오를 시작하지 못했어요. {known}\n\n({text[:300]})"
+
+
 def _tk_window(runner: Runner) -> bool:
     """A small status window (closing it quits the app).  Returns False when Tk is not available."""
     try:
@@ -198,11 +230,17 @@ def main(argv: list[str] | None = None) -> int:
             webbrowser.open(f"http://127.0.0.1:{settings.port}/")
         print("gyeol 스튜디오가 이미 실행 중이에요. 브라우저를 열었어요.")
         return 0
-    _setup_logging(Layout(settings.data_dir))
-    log.info("starting gyeol-studio %s, data %s", __version__, settings.data_dir)
-    runner = Runner(settings, console=args.console)
+    try:
+        _setup_logging(Layout(settings.data_dir))
+        log.info("starting gyeol-studio %s, data %s", __version__, settings.data_dir)
+        runner = Runner(settings, console=args.console)
+    except Exception as exc:  # noqa: BLE001 - shown to the person instead of a silent exit
+        log.exception("startup failed")
+        _fatal(_startup_message(exc, settings.data_dir), console=args.console)
+        return 1
     if not runner.start():
-        print("서버를 시작하지 못했어요. 다른 프로그램이 포트를 쓰고 있는지 확인해 주세요.", file=sys.stderr)
+        _fatal("앱 서버를 시작하지 못했어요. 다른 프로그램이 같은 포트를 쓰고 있을 수 있어요. PC를 다시 시작한 뒤 다시 실행해 주세요.",
+               console=args.console)
         runner.stop()
         return 1
     if settings.open_browser and not args.no_browser:
